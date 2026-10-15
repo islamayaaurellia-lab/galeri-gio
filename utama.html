@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Galeri Gio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+color-scheme:dark;
+--bg:#000;
+--neon:#3d7bff;
+--neon2:#cfe0ff;
+--fg:#fff;
+--glass:rgba(255,255,255,.07);
+--glass-b:rgba(255,255,255,.22);
+--r:25px;
+--font:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+img{max-width:100%}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{
+margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;
+overflow-x:hidden;min-height:100vh;
+}
+.container{max-width:1100px;margin:0 auto;padding:20px;}
+header{text-align:center;padding:40px 20px;}
+h1{font-weight:200;letter-spacing:0.3em;font-size:clamp(24px, 5vw, 40px);margin-bottom:10px;text-shadow:0 0 15px var(--neon);}
+p.subtitle{opacity:0.6;font-size:14px;letter-spacing:0.1em;}
+
+/* Tombol Panel Admin Rahasia / Trigger Upload */
+.admin-trigger{
+position:fixed;bottom:20px;right:20px;background:var(--neon);color:white;border:none;
+width:50px;height:50px;border-radius:50%;cursor:pointer;box-shadow:0 0 20px var(--neon);
+z-index:99;display:flex;align-items:center;justify-content:center;font-size:20px;transition:0.3s;
+}
+.admin-trigger:hover{transform:scale(1.1);}
+
+/* Modal Upload */
+#uploadModal{
+position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;display:none;
+align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(10px);
+}
+.modal-content{
+background:rgba(20,20,20,0.95);border:1px solid var(--glass-b);padding:30px;
+border-radius:var(--r);width:100%;max-width:450px;box-shadow:0 0 30px rgba(61,123,255,0.2);
+}
+.modal-content h3{margin-top:0;font-weight:300;letter-spacing:0.1em;margin-bottom:20px;}
+.form-group{margin-bottom:15px;}
+.form-group label{display:block;font-size:13px;opacity:0.7;margin-bottom:5px;}
+.form-group input, .form-group textarea{
+width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid var(--glass-b);
+border-radius:12px;color:white;font-size:14px;outline:none;transition:0.3s;
+}
+.form-group input:focus, .form-group textarea:focus{border-color:var(--neon);box-shadow:0 0 10px rgba(61,123,255,0.3);}
+.btn-submit{
+width:100%;background:var(--neon);color:white;border:none;padding:12px;border-radius:12px;
+font-weight:600;cursor:pointer;transition:0.3s;margin-top:10px;
+}
+.btn-submit:hover{background:#2a63d7;}
+.btn-close{background:transparent;border:none;color:white;opacity:0.5;cursor:pointer;float:right;font-size:18px;}
+
+/* Grid Galeri */
+.gallery-grid{
+display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:25px;margin-top:40px;
+}
+.gallery-card{
+background:var(--glass);border:1px solid var(--glass-b);border-radius:var(--r);
+overflow:hidden;transition:0.3s;display:flex;flex-direction:column;
+}
+.gallery-card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(61,123,255,0.15);}
+.gallery-img-wrap{height:260px;overflow:hidden;background:#111;}
+.gallery-img-wrap img{width:100%;height:100%;object-fit:cover;transition:0.5s;}
+.gallery-card:hover .gallery-img-wrap img{transform:scale(1.05);}
+.gallery-info{padding:20px;}
+.gallery-info p{margin:0;font-size:14px;line-height:1.5;opacity:0.9;}
+</style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>GALERI GIO</h1>
+            <p class="subtitle">Kumpulan Momen & Kenangan Indah</p>
+        </header>
+
+        <!-- Tempat Foto Tampil -->
+        <div id="galleryGrid" class="gallery-grid">
+            <!-- Data foto akan dimuat secara otomatis dari penyimpanan online -->
+            <div style="grid-column: 1/-1; text-align:center; opacity:0.5; padding:50px;">
+                <i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>Memuat kenangan...
+            </div>
+        </div>
+    </div>
+
+    <!-- Tombol Admin Rahasia di Pojok Kanan Bawah -->
+    <button class="admin-trigger" onclick="toggleModal()" title="Tambah Foto Baru">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <!-- Modal Form Tambah Foto -->
+    <div id="uploadModal">
+        <div class="modal-content">
+            <button class="btn-close" onclick="toggleModal()">&times;</button>
+            <h3>Tambah Kenangan Baru</h3>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label>Pilih Foto</label>
+                    <input type="file" id="photoFile" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label>Keterangan / Pesan</label>
+                    <textarea id="photoCaption" rows="3" placeholder="Tulis cerita atau kenangan di sini..." required></textarea>
+                </div>
+                <button type="submit" class="btn-submit" id="submitBtn">Publikasikan Foto</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi GitHub Repository kamu (Ganti bagian ini nanti dengan milikmu)
+        const GITHUB_USER = "USERNAME_GITHUB_KAMU"; 
+        const GITHUB_REPO = "NAMA_REPO_KAMU";
+        const GITHUB_TOKEN = "TOKEN_GITHUB_KAMU"; // Token akses pribadi (Personal Access Token)
+
+        function toggleModal() {
+            const modal = document.getElementById('uploadModal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        // Ambil data foto dari file JSON di GitHub repository
+        async function fetchGallery() {
+            try {
+                const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/data.json`);
+                if (!response.ok) throw new Error("Belum ada data");
+                const data = await response.json();
+                renderGallery(data);
+            } catch (error) {
+                document.getElementById('galleryGrid').innerHTML = `
+                    <div style="grid-column: 1/-1; text-align:center; opacity:0.5; padding:40px;">
+                        Belum ada foto yang diunggah. Klik tombol <b>+</b> di pojok kanan bawah untuk menambah foto pertama!
+                    </div>`;
+            }
+        }
+
+        function renderGallery(photos) {
+            const grid = document.getElementById('galleryGrid');
+            if (photos.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; opacity:0.5; padding:40px;">Galeri masih kosong.</div>`;
+                return;
+            }
+            
+            grid.innerHTML = photos.map(item => `
+                <div class="gallery-card">
+                    <div class="gallery-img-wrap">
+                        <img src="${item.url}" alt="Foto Galeri">
+                    </div>
+                    <div class="gallery-info">
+                        <p>${escapeHtml(item.caption)}</p>
+                    </div>
+                </div>
+            `).reverse().join(''); // Menampilkan yang terbaru di atas
+        }
+
+        // Proses Upload saat tombol dikirim
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('photoFile');
+            const captionInput = document.getElementById('photoCaption');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (fileInput.files.length === 0) return;
+
+            submitBtn.innerText = "Mengunggah...";
+            submitBtn.disabled = true;
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function() {
+                const base64Content = reader.result.split(',')[1];
+                const fileName = `images/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+
+                try {
+                    // 1. Upload file gambar ke GitHub
+                    await githubAPIUpload(fileName, base64Content, `Upload foto baru: ${captionInput.value}`);
+
+                    // 2. Ambil data.json yang lama, lalu tambahkan foto baru ke dalamnya
+                    let currentData = [];
+                    try {
+                        const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/data.json`);
+                        if (res.ok) currentData = await res.json();
+                    } catch(err) {}
+
+                    const newPhotoUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${fileName}`;
+                    currentData.push({ url: newPhotoUrl, caption: captionInput.value });
+
+                    // 3. Update file data.json di GitHub
+                    await githubAPIUpdateJSON('data.json', currentData, "Update daftar galeri");
+
+                    alert("Berhasil mempublikasikan foto!");
+                    fileInput.value = '';
+                    captionInput.value = '';
+                    toggleModal();
+                    fetchGallery();
+                } catch (err) {
+                    alert("Gagal mengunggah: " + err.message);
+                } finally {
+                    submitBtn.innerText = "Publikasikan Foto";
+                    submitBtn.disabled = false;
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Helper GitHub API untuk Upload File Gambar
+        async function githubAPIUpload(path, contentBase64, message) {
+            const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path}`;
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message, content: contentBase64 })
+            });
+            if (!response.ok) throw new Error("Gagal mengunggah file ke repository.");
+            return await response.json();
+        }
+
+        // Helper GitHub API untuk Update data.json
+        async function githubAPIUpdateJSON(path, jsonData, message) {
+            const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path}`;
+            
+            // Cek sha file lama jika ada
+            let sha = "";
+            const getRes = await fetch(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+            if (getRes.ok) {
+                const fileData = await getRes.json();
+                sha = fileData.sha;
+            }
+
+            const bodyData = {
+                message: message,
+                content: btoa(unescape(encodeURIComponent(JSON.stringify(jsonData, null, 2))))
+            };
+            if (sha) bodyData.sha = sha;
+
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(bodyData)
+            });
+            if (!response.ok) throw new Error("Gagal memperbarui database JSON.");
+            return await response.json();
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // Jalankan saat pertama kali dibuka
+        fetchGallery();
+    </script>
+</body>
+</html>
